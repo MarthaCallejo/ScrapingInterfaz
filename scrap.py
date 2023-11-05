@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+import re
 
 # URL del sitio web
 url = "https://tienda.durigutti.com/"
@@ -32,6 +33,18 @@ def extraccion_links_vinos(lista_enlaces_menu):
                 vinos_enlaces.append(link.get("href"))
     return vinos_enlaces
 
+def obtener_titulo_producto(url):
+    response = requests.get(url)
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.text, "html.parser")
+        titulo = soup.find('h1')
+        if titulo:
+            return titulo.text.strip()
+        else:
+            return "Titulo no encontrado"
+    else:
+        return "Error al obtener la página:", response.status_code
+    
 def obtener_descripcion_producto(url):
     response = requests.get(url)
     if response.status_code == 200:
@@ -44,9 +57,47 @@ def obtener_descripcion_producto(url):
     else:
         return "Error al obtener la página:", response.status_code
 
+def obtener_precio_producto(url):
+    response = requests.get(url)
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.text, "html.parser")
+        price = soup.find(class_='price')
+        if price:
+            return price.text.strip()
+        else:
+            return "Precio no encontrada"
+    else:
+        return "Error al obtener la página:", response.status_code
+
 lista_enlaces_menu = estraccion_links_menu(url)
 vinos_enlaces = extraccion_links_vinos(lista_enlaces_menu)
 
+def calculo_de_precio(descripcion,precio):
+    numero_buscar = re.search(r'(\d+)\.(\d+)',precio)
+    if numero_buscar:
+        numero_uno = numero_buscar.group(1)
+        numero_dos = numero_buscar.group(2)
+        numero_completo = numero_uno + numero_dos
+        numero_calcular = int(numero_completo)
+    buscar_numero = re.search(r'x(\d+)', descripcion)
+    if buscar_numero:
+        numero = int(buscar_numero.group(1))
+        if numero != 0:
+            calculo = numero_calcular/numero
+            precio = f"${calculo}"
+
+    return precio
+
 for vino_url in vinos_enlaces:
+    titulo = obtener_titulo_producto(vino_url)
     descripcion = obtener_descripcion_producto(vino_url)
-    print(f"Descripción del producto en {vino_url}:\n{descripcion}\n")
+    precio = obtener_precio_producto(vino_url)
+    precio_calculado = calculo_de_precio(descripcion,precio)
+    print(f"Titulo del producto:\n{titulo}\n")
+    print(f"Descripción del producto:\n{descripcion}\n")
+    if precio_calculado == precio:
+        print(f"Precio del producto:\n{precio}\n")
+    else:
+        print(f"Precio del producto por caja:\n{precio}\n")
+        print(f"Precio por unidad:\n{precio_calculado}")
+    print("-------------------------------------")
