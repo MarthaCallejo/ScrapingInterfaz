@@ -72,19 +72,32 @@ def obtener_precio_producto(url):
 lista_enlaces_menu = estraccion_links_menu(url)
 vinos_enlaces = extraccion_links_vinos(lista_enlaces_menu)
 
-def calculo_de_precio(descripcion,precio):
-    numero_buscar = re.search(r'(\d+)\.(\d+)',precio)
-    if numero_buscar:
-        numero_uno = numero_buscar.group(1)
-        numero_dos = numero_buscar.group(2)
+def extraer_precio(precio):
+    precio = re.search(r'(\d+)\.(\d+)',precio)
+    if precio:
+        numero_uno = precio.group(1)
+        numero_dos = precio.group(2)
         numero_completo = numero_uno + numero_dos
-        numero_calcular = int(numero_completo)
-    buscar_numero = re.search(r'x(\d+)', descripcion)
-    if buscar_numero:
-        numero = int(buscar_numero.group(1))
-        if numero != 0:
-            calculo = numero_calcular/numero
-            precio = f"${calculo}"
+        precio = int(numero_completo)
+    return precio
+
+def extraer_numero_caja(descripcion):
+    numero_pack = re.search(r'x(\d+)|x\s(\d+)', descripcion)
+    if numero_pack is not None:
+        if numero_pack.group(1) is not None:
+            return numero_pack.group(1)
+        elif numero_pack.group(2) is not None:
+            return numero_pack.group(2)
+    else:
+        return False
+
+def calculo_de_precio(descripcion,precio):
+    numero_precio = extraer_precio(precio)
+    numero_pack = extraer_numero_caja(descripcion)
+
+    if numero_pack != False:
+        calculo = int(numero_precio)/int(numero_pack)
+        precio = f"${calculo}"
 
     return precio
 
@@ -98,6 +111,6 @@ for vino_url in vinos_enlaces:
     if precio_calculado == precio:
         print(f"Precio del producto:\n{precio}\n")
     else:
-        print(f"Precio del producto por caja:\n{precio}\n")
+        print(f"Precio de la caja:\n{precio}\n")
         print(f"Precio por unidad:\n{precio_calculado}")
     print("-------------------------------------")
