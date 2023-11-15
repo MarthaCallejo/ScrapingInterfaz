@@ -5,6 +5,7 @@ import re
 # URL del sitio web
 url = "https://tienda.durigutti.com/"
 
+print("Aguarde un momento.....")
 # Realizar una solicitud GET al sitio web
 def estraccion_links_menu(url):
     response = requests.get(url)
@@ -101,16 +102,37 @@ def calculo_de_precio(descripcion,precio):
 
     return precio
 
-for vino_url in vinos_enlaces:
-    titulo = obtener_titulo_producto(vino_url)
-    descripcion = obtener_descripcion_producto(vino_url)
-    precio = obtener_precio_producto(vino_url)
-    precio_calculado = calculo_de_precio(descripcion,precio)
-    print(f"Titulo del producto:\n{titulo}\n")
-    print(f"Descripción del producto:\n{descripcion}\n")
-    if precio_calculado == precio:
-        print(f"Precio del producto:\n{precio}\n")
-    else:
-        print(f"Precio de la caja:\n{precio}\n")
-        print(f"Precio por unidad:\n{precio_calculado}")
-    print("-------------------------------------")
+def buscar_ocurrencia(categoria, link_vino):
+    try:
+        response = requests.get(link_vino)
+        sopa = BeautifulSoup(response.text, "html.parser")
+        texto = sopa.find(class_="woocommerce-product-attributes-item woocommerce-product-attributes-item--attribute_pa_tipo-de-vino")
+        encontrado = False
+        if texto:
+            buscar = re.search(r'\b' + re.escape(categoria) + r'\b', texto.get_text().strip())
+            if buscar:
+                encontrado = True
+    except:
+        print("Link no encontrado")
+    return encontrado
+
+def extraer_informacion(vinos_enlaces):
+    categoria = input("¿Que tipo de vino le gustaria consultar?: ").capitalize()
+    precio_minimo = int(input("Precio minimo: "))
+    precio_maximo = int(input("Precio maximo: "))  
+    for vino_url in vinos_enlaces:
+        coincide = buscar_ocurrencia(categoria, vino_url, precio_minimo, precio_maximo)
+        if coincide:
+            titulo = obtener_titulo_producto(vino_url)
+            descripcion = obtener_descripcion_producto(vino_url)
+            precio = obtener_precio_producto(vino_url)
+            precio_calculado = calculo_de_precio(descripcion,precio)
+            print(f"Titulo del producto:\n{titulo}\n")
+            print(f"Descripción del producto:\n{descripcion}\n")
+            if precio_calculado == precio:
+                print(f"Precio del producto:\n{precio}\n")
+            else:
+                print(f"Precio de la caja:\n{precio}\n")
+                print(f"Precio por unidad:\n{precio_calculado}")
+            print("-------------------------------------")
+extraer_informacion(vinos_enlaces)
