@@ -121,17 +121,19 @@ def buscar_ocurrencia(categoria, link_vino):
             buscar = re.search(r'\b' + re.escape(categoria) + r'\b', texto.get_text().strip())
             if buscar:
                 encontrado = True
+        return encontrado
     except:
-        print("Link no encontrado")
-    return encontrado
+        return False
+    
 
 def extraer_informacion(vinos_enlaces):
     seguir = True
     while seguir == True:
         try:
-            categoria = input("¿Que tipo de vino le gustaria consultar?: ").capitalize()
+            categoria = input("¿Que tipo de vino le gustaria consultar?: \n Tinto - Blanco - Dulce - Rosado - Destilado - Naranjo - Vermut \n Escriba: ").capitalize()
             precioMinimo = int(input("Precio minimo: "))
             precioMaximo = int(input("Precio maximo: "))
+            print("Buscando.....")
             for vino_url in vinos_enlaces:
                 coincide = buscar_ocurrencia(categoria, vino_url)
                 if coincide: 
